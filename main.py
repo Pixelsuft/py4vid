@@ -63,20 +63,19 @@ if len(sys.argv) <= 1:
     )
     sys.exit(0)
 
-if subprocess.call([
-    'ffmpeg',
-    '-version'
-], shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE):
-    error('FFMpeg not found!', fatal=True)
-    sys.exit(1)
-
 audio_format = 'wav'  # OGG may be better
 current_path = os.getcwd()
 fn = sys.argv[1]
 use_sound = '-nosound' not in sys.argv[2:]
+if use_sound and subprocess.call([
+    'ffmpeg',
+    '-version'
+], shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE):
+    error('FFMpeg not found!', fatal=False)
+    use_sound = False
+    log('No Sound Support')
 if not os.path.isfile(fn):
     error('File not found!', fatal=True)
-    sys.exit(1)
 audio_fn = fn + '.tmp_audio.' + audio_format
 if use_sound:
     if os.access(audio_fn, os.F_OK):
