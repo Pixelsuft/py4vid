@@ -150,10 +150,10 @@ pause_screen: pygame.Surface  # Fuck PyCharm
 pause_screen_: pygame.Surface  # Fuck PyCharm
 
 
-log('Running loop...')
+log('Running Loop...')
 ret, frame = cap.read()
 if use_sound:
-    log('Playing sound...')
+    log('Playing Sound...')
     channel = sound.play()
 clock.run()
 while running:
@@ -200,7 +200,7 @@ while running:
         screen.blit(pygame.image.frombuffer(
             frame.tobytes(),
             frame.shape[1::-1],
-            'RGB'
+            'BGR'
         ), (0, 0))
     pygame.display.flip()
     ret, frame = cap.read()  # Some optimisations
