@@ -4,6 +4,11 @@ import time
 import subprocess
 import pygame
 import cv2
+try:
+    import winaudio
+    use_winaudio = True
+except ImportError:
+    use_winaudio = False
 
 
 def format_path(*path):
@@ -59,7 +64,7 @@ print('\n', end='')
 
 if len(sys.argv) <= 1:
     print(
-        f'Usage: "{sys.executable}" "{__file__}" "path_to_video" [-nosound]'
+        f'Usage: "{sys.executable}" "{__file__}" "path_to_video" [-nosound] [-pygame.mixer]'
     )
     sys.exit(0)
 
@@ -67,6 +72,7 @@ audio_format = 'wav'  # OGG may be better
 current_path = os.getcwd()
 fn = sys.argv[1]
 use_sound = '-nosound' not in sys.argv[2:]
+use_winaudio = '-pygame.mixer' not in sys.argv[2:] and use_winaudio
 if use_sound and subprocess.call([
     'ffmpeg',
     '-version'
@@ -142,7 +148,10 @@ pygame.display.set_caption('py4vid')
 pygame.display.set_icon(pygame.image.load(format_path('icon.ico')).convert_alpha())
 if use_sound:
     log('Loading Sound...')
-    sound = pygame.mixer.Sound(audio_fn)  # Fuck PyCharm
+    if use_winaudio:
+        sound = winaudio.AudioPlayer(audio_fn)  # Fuck PyCharm
+    else:
+        sound = pygame.mixer.Sound(audio_fn)  # Fuck PyCharm
 use_scale = False
 running = True
 pause_screen: pygame.Surface  # Fuck PyCharm
@@ -152,7 +161,7 @@ pause_screen_: pygame.Surface  # Fuck PyCharm
 log('Running Loop...')
 ret, frame = cap.read()
 if use_sound:
-    log('Playing Sound...')
+    log('Playing Sound [' + ('winaudio' if use_winaudio else 'pygame.mixer') + ']...')
     channel = sound.play()
 clock.run()
 while running:
@@ -173,13 +182,19 @@ while running:
             if event.key == pygame.K_SPACE:
                 if clock.is_paused:
                     if use_sound:
-                        channel.unpause()
+                        if use_winaudio:
+                            sound.resume()
+                        else:
+                            channel.unpause()
                     clock.resume()
                     screen.blit(pause_screen_, (0, 0))
                     pygame.display.flip()
                 else:
                     if use_sound:
-                        channel.pause()
+                        if use_winaudio:
+                            sound.pause()
+                        else:
+                            channel.pause()
                     clock.pause()
                     pause_screen = pause_screen_ = screen.copy()
                     draw_pause(screen, w_, h_)
@@ -208,6 +223,8 @@ while running:
 if use_sound:
     log('Stopping Sound...')
     sound.stop()
+    if use_winaudio:
+        sound.close()
     if os.access(audio_fn, os.F_OK):
         log('Removing Extracted Audio...')
         os.remove(audio_fn)
