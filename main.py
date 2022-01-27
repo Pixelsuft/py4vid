@@ -69,7 +69,9 @@ if len(sys.argv) <= 1:
     sys.exit(0)
 
 audio_format = 'wav'  # OGG may be better
-current_path = os.getcwd()
+current_path = os.path.dirname(__file__)
+if not current_path:
+    current_path = os.getcwd()
 fn = sys.argv[1]
 use_sound = '-nosound' not in sys.argv[2:]
 use_winaudio = '-pygame.mixer' not in sys.argv[2:] and use_winaudio
